@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ssafy.web.map.model.mapper.MapMapper">
+
+	<resultMap type="com.ssafy.web.map.model.SidoDto" id="sido">
+		<result column="sido_code" property="sidoCode"/>
+		<result column="sido_name" property="sidoName"/>
+	</resultMap>
+	
+	<resultMap type="com.ssafy.web.map.model.GugunDto" id="gugun">
+		<result column="gugun_code" property="gugunCode"/>
+		<result column="gugun_name" property="gugunName"/>
+	</resultMap>
+	
+	<resultMap type="com.ssafy.web.map.model.AttractionDto" id="attraction">
+		<result column="content_id" property="contentId"/>
+		<result column="content_type_id" property="contentTypeId"/>
+		<result column="title" property="title"/>
+		<result column="addr1" property="addr1"/>
+		<result column="addr2" property="addr2"/>
+		<result column="zipcode" property="zipcode"/>
+		<result column="tel" property="tel"/>
+		<result column="first_image" property="firstImage"/>
+		<result column="sido_code" property="sidoCode"/>
+		<result column="gugun_code" property="gugunCode"/>
+		<result column="latitude" property="latitude"/>
+		<result column="longitude" property="longitude"/>
+	</resultMap>
+
+	<select id="getSido" resultMap="sido">
+		select sido_code, sido_name
+		from sido
+		order by sido_code
+	</select>
+	
+	<select id="getGugunInSido" parameterType="int" resultMap="gugun">
+		select gugun_code, gugun_name
+		from gugun
+		where sido_code = #{sido}
+		order by gugun_code
+	</select>
+	
+	<sql id="attractionWhereClause">
+		<where>
+			<if test="sidoCode != 0">
+				AND sido_code = #{sidoCode}
+			</if>
+			<if test="gugunCode != 0">
+				AND gugun_code = #{gugunCode} 
+			</if>
+        	<if test="key == 'title' or key == 'addr1'">
+    			AND ${key} like concat('%', #{word}, '%')
+			</if>
+		</where>
+	</sql>
+	
+	<select id="listAttraction" parameterType="com.ssafy.web.map.model.ListParamDto" resultMap="attraction">
+		<if test="contentTypeId != ''">
+			select *
+			from 
+				(select *
+  				from attraction_info
+  				<include refid="attractionWhereClause"/> 
+    			) A
+			where
+			<foreach collection="contentTypeId.split(',')" item="id" separator=" OR ">
+				content_type_id = #{id}
+      		</foreach>
+      		limit 200
+   		</if>
+   		<if test="contentTypeId == ''">
+   			select *
+  			from attraction_info
+  			<include refid="attractionWhereClause"/>
+    		limit 200
+   		</if>	
+	</select>
+	
+	<select id="detailAttraction" parameterType="string" resultType="string">
+		select overview
+		from attraction_description
+		where content_id = #{contentId}
+	</select>
+	
+</mapper>

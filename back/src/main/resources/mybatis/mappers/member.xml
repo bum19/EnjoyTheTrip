@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ssafy.web.member.model.mapper.MemberMapper">
+
+	<resultMap type="com.ssafy.web.member.model.MemberDto" id="member">
+		<result column="email" property="email"/>
+		<result column="user_name" property="userName"/>
+	</resultMap>
+	
+	<!-- ADMIN -->
+	<resultMap type="com.ssafy.web.member.model.MemberDto" id="memberAll" extends="member">
+		<result column="email" property="email"/>
+		<result column="user_name" property="userName"/>
+		<result column="user_password" property="userPassword"/>
+		<result column="question" property="question"/>
+		<result column="answer" property="answer"/>
+		<result column="join_date" property="joinDate"/>
+	</resultMap>
+	
+	<resultMap type="com.ssafy.web.member.model.LoginCheckDto" id="loginCheck">
+		<result column="email" property="email"/>
+		<result column="try_count" property="tryCount"/>
+		<result column="last_try_time" property="lastTryTime"/>
+	</resultMap>
+
+	<select id="emailCheck" parameterType="String" resultType="int">
+		select count(email)
+		from members
+		where email = #{email}
+	</select>
+
+	<insert id="joinMember" parameterType="com.ssafy.web.member.model.MemberDto">
+		insert into members (email, user_name, user_password, question, answer, join_date)
+		values (#{email}, #{userName}, #{userPassword}, #{question}, #{answer}, now())
+	</insert>
+
+	<select id="loginMember" parameterType="com.ssafy.web.member.model.MemberDto" resultMap="member">
+		select email, user_name
+		from members
+		where email = #{email} and user_password = #{userPassword}
+	</select>
+	
+	<!-- ADMIN -->
+	<select id="listMember" resultMap="memberAll">
+		select email, user_name, user_password, email_id, email_domain, join_date
+		from members
+		order by join_date
+	</select>
+	
+	
+	<select id="getMember" parameterType="string" resultMap="memberAll">
+		select email, user_name, user_password, question, answer, join_date
+		from members
+		where email = #{email}
+	</select>
+	
+	<insert id="saveToken" parameterType="com.ssafy.web.member.model.MemberDto" >
+  		insert into 
+  		member_login (email, salt, access_token, refresh_token)
+  		values (#{email}, #{salt},#{access_token}, #{refresh_token})
+  		on duplicate key 
+  		update salt=#{salt},access_token=#{access_token},refresh_token=#{refresh_token}
+  	</insert>
+	
+	<!-- <update id="updateMember" parameterType="com.ssafy.web.member.model.MemberDto">
+		update members
+		<trim prefix="set" suffixOverrides=",">
+			<if test="user_password != null">user_password = #{user_password},</if>
+			<if test="email_id != null">email_id = #{email_id},</if>
+			<if test="email_domain != null">email_domain = #{email_domain},</if>
+		</trim>
+		where email = #{email}
+	</update> -->
+	<update id="updateMember" parameterType="com.ssafy.web.member.model.MemberDto">
+		update members
+		<trim prefix = "set" suffixOverrides=",">
+			<if test="userName != null">user_name = #{userName},</if>
+			<if test="question != null">question = #{question},</if>
+			<if test="answer != null">answer = #{answer},</if>
+		</trim>
+		where email = #{email}
+	</update>
+	
+	<update id="updatePW" parameterType="com.ssafy.web.member.model.MemberDto">
+		update members
+		set user_password = #{userPassword}
+		where email = #{email}
+	</update>
+	
+	<delete id="deleteMember" parameterType="String">
+		delete from members
+		where email = #{email}
+	</delete>
+	
+	<select id="getQuestion" parameterType="String" resultType="String">
+		select question
+		from members
+		where email = #{email}
+	</select>
+	
+
+	<select id="loginCheck" parameterType="String" resultMap="loginCheck">
+		select *
+		from login_check
+		where email = #{email}
+	</select>
+	
+	<delete id="deleteLoginCheck" parameterType="String">
+		delete from login_check
+		where email = #{email}
+	</delete>
+	
+	<insert id="plusLoginCount" parameterType="String">
+    	INSERT INTO login_check (email)
+    	VALUES (#{email})
+    	ON DUPLICATE KEY UPDATE try_count = try_count + 1;
+	</insert>
+
+</mapper>

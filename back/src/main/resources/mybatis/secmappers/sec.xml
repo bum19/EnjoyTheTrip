@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+  
+<mapper namespace="com.ssafy.web.member.sec.mapper.MemberSecMapper">
+	
+	<resultMap type="com.ssafy.web.member.model.MemberSecDto" id="memberSecDto">
+		<result column="email" property="email" />
+		<result column="salt" property="salt" />
+		<result column="seckey" property="seckey" />
+		<result column="initvector" property="initVector" />
+	</resultMap>
+
+	<insert id="join" parameterType="com.ssafy.web.member.model.MemberSecDto">
+		insert into info
+		values(#{email}, #{salt}, #{secKey}, #{initVector})
+	</insert>
+	
+	<select id="find" parameterType="String" resultType="com.ssafy.web.member.model.MemberSecDto">
+		select *
+		from info
+		where email = #{email}
+	</select>
+	
+	<delete id="delete" parameterType="String">
+		delete
+		from info
+		where email = #{email}
+	</delete>
+	
+	<update id="update" parameterType="com.ssafy.web.member.model.MemberSecDto">
+		update info
+			set salt = #{salt}, seckey = #{secKey}, initvector = #{initVector}
+			where email = #{email}
+	</update>
+</mapper>

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ssafy.web.review.model.mapper.ReviewMapper">
+
+	<resultMap type="com.ssafy.web.review.model.ReviewDto" id="review">
+		<result column="review_no" property="reviewNo"/>
+		<result column="email" property="email"/>
+		<result column="subject" property="subject"/>
+		<result column="content" property="content"/>
+		<result column="hit" property="hit"/>
+		<result column="score" property="score"/>
+		<result column="content_id" property="contentId"/>
+		<result column="attraction_title" property="attractionTitle"/>
+		<result column="register_time" property="registerTime"/>
+	</resultMap>
+
+	<insert id="writeReview" parameterType="com.ssafy.web.review.model.ReviewDto">
+		insert into review (email, subject, content, content_id, attraction_title, hit, score, register_time)
+		values (#{email}, #{subject}, #{content}, #{contentId}, #{attractionTitle}, 0, #{score}, now())
+		<selectKey resultType="int" keyProperty="reviewNo" order="AFTER">
+			select last_insert_id()
+		</selectKey>
+	</insert>
+
+	<sql id="search">
+		<if test="word != null and word != ''">
+			<if test="key == 'subject'">
+				and subject like concat('%', #{word}, '%')
+			</if>
+			<if test="key != 'subject'">
+				and ${key} = #{word}
+			</if>
+		</if>
+	</sql>
+
+	<select id="listReview" parameterType="map" resultMap="review">
+		select *
+		from review
+		where 1=1
+		<include refid="search"></include>
+		order by review_no desc
+		limit #{start}, #{listsize}
+	</select>
+	
+	<select id="getTotalReviewCount" parameterType="map" resultType="int">
+		select count(review_no)
+		from review b
+		where 1=1
+		<include refid="search"></include>
+	</select>
+	
+	<select id="getReview" parameterType="int" resultMap="review">
+		select *
+		from review 
+		where review_no = #{reviewNo}
+	</select>
+	
+	
+	<update id="updateHit" parameterType="int">
+		update review
+		set hit = hit + 1
+		where review_no = #{reviewNo}
+	</update>
+	
+	<update id="modifyReview" parameterType="com.ssafy.web.review.model.ReviewDto">
+		update review
+		set subject = #{subject}, content = #{content}, score = #{score}
+		where review_no = #{reviewNo}
+	</update>
+	
+	<delete id="deleteReview" parameterType="int">
+		delete from review
+		where review_no = #{reviewNo}
+	</delete>
+
+</mapper>
